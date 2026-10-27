@@ -1,6 +1,6 @@
 # nvidia-smi-webserver
 
-A GPU metrics server that exposes temperature, power, utilization, and memory data over HTTP as JSON. Supports NVIDIA, AMD, and Intel GPUs.
+A GPU metrics server that exposes temperature, power, utilization, and memory data over HTTP as JSON. Supports NVIDIA, AMD, Intel, and Apple Silicon GPUs (including the Apple Neural Engine).
 
 ## Server
 
@@ -38,7 +38,36 @@ The server listens on `0.0.0.0:8000` and exposes a single endpoint:
 
 ---
 
-## Deployment (systemd)
+## macOS / Apple Silicon
+
+On Apple Silicon (M1/M2/M3/M4 and variants) the server reports two entries with
+`"vendor": "apple"`:
+
+- **Integrated GPU** (`index: 0`) — name, GPU busy %, power draw, and unified
+  memory usage.
+- **Neural Engine / ANE** (`index: 1`) — power draw.
+
+### Metric sources & caveats
+
+- **GPU name and core count** come from `system_profiler` and work without root.
+- **Live metrics** (GPU busy %, GPU power, ANE power) come from `powermetrics`,
+  which **requires root**. Run the server with `sudo` to populate these fields;
+  otherwise the device is still listed by name with dynamic fields set to `null`.
+- **Unified memory**: Apple Silicon shares one memory pool between CPU, GPU, and
+  ANE, so there is no dedicated VRAM. `memory_total_mb` is the total unified
+  memory and `memory_used_mb` is the system-wide used memory (active + wired +
+  compressed), since that is the pool the GPU draws from.
+- **Temperature** is not exposed through a root-free API on Apple Silicon, so
+  `temperature_c` is `null`.
+
+```bash
+# For full metrics on macOS, run as root:
+sudo python3 server.py
+```
+
+---
+
+
 
 Deploy the server as a systemd service on the GPU machine so it starts on boot and auto-restarts on failure.
 

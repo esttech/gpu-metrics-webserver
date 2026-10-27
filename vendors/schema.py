@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class GPUMetrics(BaseModel):
-    vendor: str          # "nvidia", "amd", or "intel"
+    vendor: str          # "nvidia", "amd", "intel", or "apple"
     index: int
     name: str
     temperature_c: Optional[float] = None
